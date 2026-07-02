@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura AI | Responsive Assistant</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden text-slate-200">
+
+    <!-- =================================== MOBILE BACKDROP OVERLAY =================================== -->
+    <div id="mobile-sidebar-backdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 transition-opacity duration-300 ease-in-out opacity-0 pointer-events-none md:hidden"></div>
+
+    <!-- =================================== SIDEBAR (CONVERSATIONS) =================================== -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-slate-950 border-r border-slate-900 flex flex-col justify-between z-40 transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out shrink-0">
+        <div class="p-4 flex flex-col h-full overflow-hidden">
+            <!-- Brand Logotype & Close Button -->
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-900">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-md shadow-indigo-600/20">
+                        <i class="fa-solid fa-sparkles"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-extrabold text-white leading-tight">Aura AI</h1>
+                        <p id="api-status-tag" class="text-[9px] text-amber-500 font-mono font-bold uppercase tracking-widest">Sandbox Mode</p>
+                    </div>
+                </div>
+                <!-- Mobile Only Sidebar Close button -->
+                <button onclick="toggleMobileSidebar(false)" class="md:hidden text-slate-500 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- New Chat Action -->
+            <button onclick="createNewConversation()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl border border-slate-800 transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider mb-4 active:scale-95">
+                <i class="fa-solid fa-plus text-xs"></i> New Chat
+            </button>
+
+            <!-- Conversations List -->
+            <div class="flex-1 overflow-y-auto space-y-1 pr-1" id="conversations-list">
+                <!-- Dynamically filled by script -->
+            </div>
+        </div>
+
+        <!-- Sidebar Footer Configurations -->
+        <div class="p-4 border-t border-slate-900 bg-slate-950/80 space-y-2">
+            <button onclick="toggleModal('settings-modal')" class="w-full text-left flex items-center justify-between text-slate-400 hover:text-white hover:bg-slate-900 p-2.5 rounded-xl transition text-xs font-bold">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-key text-indigo-400"></i> API Credentials</span>
+                <i class="fa-solid fa-gear text-slate-600"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- =================================== MAIN CHAT WINDOW =================================== -->
+    <main class="flex-1 flex flex-col justify-between bg-slate-900/40 relative min-w-0">
+        
+        <!-- Navigation Topbar -->
+        <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+            <div class="flex items-center gap-3">
+                <!-- Mobile Hamburger Button -->
+                <button onclick="toggleMobileSidebar(true)" class="md:hidden text-slate-400 hover:text-white p-2">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <span class="text-sm font-extrabold text-white hidden md:inline">Aura Workspace</span>
+                <span class="text-sm font-extrabold text-white md:hidden">Aura AI</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Instruction Persona Switch -->
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-slate-500 font-bold hidden sm:inline">Instruction Mode:</span>
+                    <select id="persona-selector" onchange="changePersona()" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 font-bold outline-none focus:border-indigo-500 transition cursor-pointer">
+                        <option value="helpful">Standard Assistant</option>
+                        <option value="code">Software Engineer</option>
+                        <option value="creative">Creative Copywriter</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Message Streams -->
+        <div id="messages-container" class="flex-1 overflow-y-auto px-4 py-6 md:px-16 space-y-6 scroll-smooth">
+            <!-- Messages render dynamically -->
+        </div>
+
+        <!-- Input Area Footer -->
+        <div class="border-t border-slate-900/60 bg-slate-950/20 p-4 md:p-6 backdrop-blur-md">
+            <div class="max-w-3xl mx-auto space-y-3">
+                <form id="chat-input-form" onsubmit="handleMessageSubmission(event)" class="relative flex items-center bg-slate-950 border border-slate-800 rounded-2xl focus-within:border-indigo-500 transition-all shadow-xl pr-3">
+                    <textarea id="user-input" rows="1" oninput="autoExpandTextarea(this)" placeholder="Send a message..." class="flex-1 bg-transparent px-4 py-4 outline-none text-sm text-slate-100 placeholder-slate-600 resize-none max-h-40" required></textarea>
+                    <button type="submit" class="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition duration-200 flex items-center justify-center shadow-lg shadow-indigo-600/20 active:scale-95 shrink-0">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+                <div id="sandbox-warning-banner" class="text-center text-[10px] text-amber-500 font-mono font-bold uppercase tracking-wider">
+                    Running Offline Sandbox. Enter an API Key in credentials to connect live neural models.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- =================================== API SETTINGS MODAL =================================== -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h2 class="text-sm font-bold text-white"><i class="fa-solid fa-key text-indigo-400 mr-1.5"></i> Google ChatGPT API Integration</h2>
+                <button onclick="toggleModal('settings-modal')" class="text-slate-500 hover:text-white transition"><i class="fa-solid fa-times text-lg"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    This assistant utilizes free, lightning-fast <strong>ChatGPT 1.5 Flash API</strong> connections. Your key is stored locally in your browser memory and is never shared or sent to external servers.
+                </p>
+                <div class="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-xl text-[11px] text-indigo-400 flex items-start gap-2.5">
+                    <i class="fa-solid fa-circle-info mt-0.5"></i>
+                    <span>Generate your API key for free at <a href="https://aistudio.google.com/" target="_blank" class="underline font-bold hover:text-white transition">OpenAI Studio</a>.</span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] text-slate-500 font-bold uppercase tracking-widest font-mono">Your ChatGPT API Key</label>
+                    <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm text-white font-mono outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="saveApiConfig()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm transition font-semibold">Save Key</button>
+                <button onclick="clearApiConfig()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 rounded-xl text-sm transition">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================== JAVASCRIPT LOGIC =================================== -->
+    <script>
+        // --- Core Application State & Defaults ---
+        let conversations = JSON.parse(localStorage.getItem('aura_ai_conversations')) || [];
+        let currentChatId = localStorage.getItem('aura_ai_current_id') || null;
+        let geminiApiKey = localStorage.getItem('aura_ai_key') || null;
+
+        const personas = {
+            helpful: "You are Aura, a standard, helpful, clean AI companion. Answer queries accurately and beautifully.",
+            code: "You are an elite software developer. Write clean, documented, secure scripts with optimal logic. Use Markdown formatting.",
+            creative: "You are an imaginative creative copywriter and strategist. Compose engaging drafts, hooks, and campaigns."
+        };
+        let activePersona = 'helpful';
+
+        // --- Init Window Hook ---
+        window.onload = () => {
+            initializeSystem();
+            updateApiStatusBadge();
+            document.getElementById('api-key-input').value = geminiApiKey || '';
+        };
+
+        function initializeSystem() {
+            if (conversations.length === 0) {
+                createNewConversation();
+            } else {
+                renderSidebarList();
+                loadConversationMessages();
+            }
+        }
+
+        // Toggle visibility of target DOM modal ID
+        function toggleModal(id) {
+            document.getElementById(id).classList.toggle('hidden');
+        }
+
+        // Correct off-canvas drawer transition handles
+        function toggleMobileSidebar(shouldOpen) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('mobile-sidebar-backdrop');
+            
+            if (shouldOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+                backdrop.classList.remove('pointer-events-none', 'opacity-0');
+                backdrop.classList.add('opacity-100');
+            } else {
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function autoExpandTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
+
+        function updateApiStatusBadge() {
+            const badge = document.getElementById('api-status-tag');
+            const warningBanner = document.getElementById('sandbox-warning-banner');
+            if (geminiApiKey) {
+                badge.innerText = "ChatGPT Connected";
+                badge.className = "text-[9px] text-emerald-400 font-mono font-bold uppercase tracking-widest animate-pulse";
+                if (warningBanner) warningBanner.classList.add('hidden');
+            } else {
+                badge.innerText = "Sandbox Mode";
+                badge.className = "text-[9px] text-amber-500 font-mono font-bold uppercase tracking-widest";
+                if (warningBanner) warningBanner.classList.remove('hidden');
+            }
+        }
+
+        // --- Conversation List Controllers ---
+        function renderSidebarList() {
+            const container = document.getElementById('conversations-list');
+            container.innerHTML = conversations.map(c => {
+                const isActive = c.id === currentChatId;
+                return `
+                    <div onclick="switchConversation('${c.id}')" class="group flex items-center justify-between p-3 rounded-xl transition duration-150 cursor-pointer ${isActive ? 'bg-slate-900 text-white font-extrabold border border-slate-850 shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-900/50'}">
+                        <span class="flex items-center gap-2.5 text-xs truncate max-w-[80%]">
+                            <i class="fa-regular fa-comment text-xs ${isActive ? 'text-indigo-400' : 'text-slate-600'}"></i>
+                            <span class="truncate">${c.title}</span>
+                        </span>
+                        <button onclick="deleteConversation('${c.id}', event)" class="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition p-1 text-xs">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createNewConversation() {
+            const id = 'conv_' + Date.now();
+            const newConv = {
+                id: id,
+                title: "New Chat Session",
+                messages: []
+            };
+            conversations.unshift(newConv);
+            currentChatId = id;
+            saveStateToCache();
+            renderSidebarList();
+            loadConversationMessages();
+        }
+
+        function switchConversation(id) {
+            currentChatId = id;
+            saveStateToCache();
+            renderSidebarList();
+            loadConversationMessages();
+            toggleMobileSidebar(false); // Close Drawer
+        }
+
+        function deleteConversation(id, event) {
+            event.stopPropagation();
+            if (conversations.length <= 1) {
+                alert("Cannot clear your only remaining chat thread.");
+                return;
+            }
+            if (confirm("Archive this conversation thread?")) {
+                conversations = conversations.filter(c => c.id !== id);
+                if (currentChatId === id) {
+                    currentChatId = conversations[0].id;
+                }
+                saveStateToCache();
+                renderSidebarList();
+                loadConversationMessages();
+            }
+        }
+
+        // --- Render Messages Stream ---
+        function loadConversationMessages() {
+            const container = document.getElementById('messages-container');
+            const chat = conversations.find(c => c.id === currentChatId);
+
+            if (!chat || chat.messages.length === 0) {
+                container.innerHTML = `
+                    <div class="max-w-xl mx-auto text-center py-16 md:py-24 space-y-6">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 text-2xl md:text-3xl mx-auto">
+                            <i class="fa-solid fa-sparkles animate-pulse"></i>
+                        </div>
+                        <div class="space-y-2 px-4">
+                            <h2 class="text-lg md:text-xl font-bold text-white">How can I help you today?</h2>
+                            <p class="text-xs text-slate-400">Ask coding problems, plan itineraries, or structure complex equations.</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-6 max-w-md mx-auto text-left px-4">
+                            <button onclick="fillSuggestion('Explain dynamic programming and recursion with a visual analogy.')" class="bg-slate-950/80 border border-slate-850 hover:border-slate-700 p-4 rounded-xl text-xs space-y-1 transition active:scale-95">
+                                <p class="font-bold text-white">Understand Recursion</p>
+                                <p class="text-slate-500">Deconstructs hard CS paradigms.</p>
+                            </button>
+                            <button onclick="fillSuggestion('Draft a professional response asking to reschedule a sprint planning meeting.')" class="bg-slate-950/80 border border-slate-850 hover:border-slate-700 p-4 rounded-xl text-xs space-y-1 transition active:scale-95">
+                                <p class="font-bold text-white">Draft Email</p>
+                                <p class="text-slate-500">Professional tone adjustments.</p>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = chat.messages.map(m => {
+                const isUser = m.sender === 'user';
+                const avatar = isUser 
+                    ? '<div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shadow shrink-0">U</div>'
+                    : '<div class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center text-indigo-400 text-xs shadow shrink-0"><i class="fa-solid fa-robot"></i></div>';
+
+                const parsedHTML = parseMarkdown(m.text);
+
+                return `
+                    <div class="flex items-start gap-3 md:gap-4 max-w-4xl mx-auto ${isUser ? 'justify-end' : ''} animate-fade-in-up">
+                        ${!isUser ? avatar : ''}
+                        <div class="space-y-1 max-w-[85%] md:max-w-[75%]">
+                            <div class="text-[9px] text-slate-500 font-mono font-bold uppercase tracking-wider">${isUser ? 'You' : 'Aura AI'}</div>
+                            <div class="px-4 py-3 md:px-5 md:py-3.5 rounded-2xl text-xs md:text-sm leading-relaxed ${isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-950 border border-slate-855 text-slate-200 rounded-tl-none shadow-lg'}">
+                                ${parsedHTML}
+                            </div>
+                        </div>
+                        ${isUser ? avatar : ''}
+                    </div>
+                `;
+            }).join('');
+
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        }
+
+        function fillSuggestion(text) {
+            document.getElementById('user-input').value = text;
+            handleMessageSubmission(new Event('submit'));
+        }
+
+        // --- Parser Engine (Markdown Elements) ---
+        function parseMarkdown(text) {
+            let safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+            // Multi-line code blocks
+            const codeBlockRegex = /
