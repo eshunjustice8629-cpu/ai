@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura AI | Responsive Assistant</title>
+    <title>Aura AI | Online Knowledge Workspace</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -13,75 +13,87 @@
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0b0f19;
+            background-color: #030712;
+            color: #f1f5f9;
         }
         .code-font {
             font-family: 'Fira Code', monospace;
         }
         /* Custom scrollbars */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: #0b0f19; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 99px; }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #374151; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden text-slate-200">
+<body class="h-screen flex overflow-hidden">
 
     <!-- =================================== MOBILE BACKDROP OVERLAY =================================== -->
-    <div id="mobile-sidebar-backdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 transition-opacity duration-300 ease-in-out opacity-0 pointer-events-none md:hidden"></div>
+    <div id="mobile-sidebar-backdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 transition-opacity duration-300 ease-in-out opacity-0 pointer-events-none lg:hidden"></div>
 
-    <!-- =================================== SIDEBAR (CONVERSATIONS) =================================== -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-slate-950 border-r border-slate-900 flex flex-col justify-between z-40 transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out shrink-0">
+    <!-- =================================== LEFT SIDEBAR (CONVERSATIONS) =================================== -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-76 bg-slate-950 border-r border-slate-900 flex flex-col justify-between z-40 transform -translate-x-full lg:translate-x-0 lg:relative transition-transform duration-300 ease-in-out shrink-0">
         <div class="p-4 flex flex-col h-full overflow-hidden">
+            
             <!-- Brand Logotype & Close Button -->
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-900">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg shadow-md shadow-indigo-600/20">
-                        <i class="fa-solid fa-sparkles"></i>
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-teal-500 flex items-center justify-center text-white text-lg shadow-lg shadow-indigo-600/20 animate-pulse">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
                     </div>
                     <div>
-                        <h1 class="text-sm font-extrabold text-white leading-tight">Aura AI</h1>
-                        <p id="api-status-tag" class="text-[9px] text-amber-500 font-mono font-bold uppercase tracking-widest">Sandbox Mode</p>
+                        <h1 class="text-sm font-extrabold text-white tracking-tight leading-tight">Aura Workspace</h1>
+                        <p id="api-status-tag" class="text-[9px] text-teal-400 font-mono font-black uppercase tracking-widest">Hybrid Online</p>
                     </div>
                 </div>
-                <!-- Mobile Only Sidebar Close button -->
-                <button onclick="toggleMobileSidebar(false)" class="md:hidden text-slate-500 hover:text-white p-1">
+                <!-- Mobile Close button -->
+                <button onclick="toggleMobileSidebar(false)" class="lg:hidden text-slate-500 hover:text-white p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
             <!-- New Chat Action -->
             <button onclick="createNewConversation()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl border border-slate-800 transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider mb-4 active:scale-95">
-                <i class="fa-solid fa-plus text-xs"></i> New Chat
+                <i class="fa-solid fa-plus text-xs"></i> New Chat Session
             </button>
 
             <!-- Conversations List -->
-            <div class="flex-1 overflow-y-auto space-y-1 pr-1" id="conversations-list">
+            <div class="flex-1 overflow-y-auto space-y-1.5 pr-1" id="conversations-list">
                 <!-- Dynamically filled by script -->
             </div>
         </div>
 
         <!-- Sidebar Footer Configurations -->
         <div class="p-4 border-t border-slate-900 bg-slate-950/80 space-y-2">
-            <button onclick="toggleModal('settings-modal')" class="w-full text-left flex items-center justify-between text-slate-400 hover:text-white hover:bg-slate-900 p-2.5 rounded-xl transition text-xs font-bold">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-key text-indigo-400"></i> API Credentials</span>
+            <button onclick="toggleModal('settings-modal')" class="w-full text-left flex items-center justify-between text-slate-450 hover:text-white hover:bg-slate-900 p-2.5 rounded-xl transition text-xs font-bold">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-indigo-400 animate-pulse"></i> API Credentials</span>
                 <i class="fa-solid fa-gear text-slate-600"></i>
             </button>
         </div>
     </aside>
 
-    <!-- =================================== MAIN CHAT WINDOW =================================== -->
-    <main class="flex-1 flex flex-col justify-between bg-slate-900/40 relative min-w-0">
+    <!-- =================================== MAIN CHAT COMPONENT =================================== -->
+    <main class="flex-1 flex flex-col justify-between bg-gradient-to-br from-slate-900 to-slate-950 relative min-w-0">
         
-        <!-- Navigation Topbar -->
-        <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+        <!-- Topbar Navigation -->
+        <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
             <div class="flex items-center gap-3">
                 <!-- Mobile Hamburger Button -->
-                <button onclick="toggleMobileSidebar(true)" class="md:hidden text-slate-400 hover:text-white p-2">
+                <button onclick="toggleMobileSidebar(true)" class="lg:hidden text-slate-400 hover:text-white p-2">
                     <i class="fa-solid fa-bars text-lg"></i>
                 </button>
-                <span class="text-sm font-extrabold text-white hidden md:inline">Aura Workspace</span>
-                <span class="text-sm font-extrabold text-white md:hidden">Aura AI</span>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="text-xs font-extrabold text-white font-mono tracking-wider uppercase">Online System Active</span>
+                </div>
             </div>
             
             <div class="flex items-center gap-4">
@@ -103,16 +115,16 @@
         </div>
 
         <!-- Input Area Footer -->
-        <div class="border-t border-slate-900/60 bg-slate-950/20 p-4 md:p-6 backdrop-blur-md">
+        <div class="border-t border-slate-900 bg-slate-950 p-4 md:p-6">
             <div class="max-w-3xl mx-auto space-y-3">
-                <form id="chat-input-form" onsubmit="handleMessageSubmission(event)" class="relative flex items-center bg-slate-950 border border-slate-800 rounded-2xl focus-within:border-indigo-500 transition-all shadow-xl pr-3">
-                    <textarea id="user-input" rows="1" oninput="autoExpandTextarea(this)" placeholder="Send a message..." class="flex-1 bg-transparent px-4 py-4 outline-none text-sm text-slate-100 placeholder-slate-600 resize-none max-h-40" required></textarea>
+                <form id="chat-input-form" onsubmit="handleMessageSubmission(event)" class="relative flex items-center bg-slate-900 border border-slate-800 rounded-2xl focus-within:border-indigo-500 transition-all shadow-xl pr-3">
+                    <textarea id="user-input" rows="1" oninput="autoExpandTextarea(this)" placeholder="Ask factual questions, design structures, or request coding..." class="flex-1 bg-transparent px-4 py-4 outline-none text-sm text-slate-100 placeholder-slate-600 resize-none max-h-40" required></textarea>
                     <button type="submit" class="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition duration-200 flex items-center justify-center shadow-lg shadow-indigo-600/20 active:scale-95 shrink-0">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
                 </form>
-                <div id="sandbox-warning-banner" class="text-center text-[10px] text-amber-500 font-mono font-bold uppercase tracking-wider">
-                    Running Offline Sandbox. Enter an API Key in credentials to connect live neural models.
+                <div id="sandbox-warning-banner" class="text-center text-[10px] text-teal-400 font-mono font-bold uppercase tracking-wider">
+                    Online Crawler Active. Asking factual questions searches global live data databases automatically.
                 </div>
             </div>
         </div>
@@ -128,7 +140,7 @@
 
             <div class="space-y-4">
                 <p class="text-xs text-slate-400 leading-relaxed">
-                    This assistant utilizes free, lightning-fast <strong>ChatGPT 1.5 Flash API</strong> connections. Your key is stored locally in your browser memory and is never shared or sent to external servers.
+                    By linking your free **ChatGPT 1.5 Flash API**, you replace the Web Crawler with standard, multi-turn cloud neural models capable of complex logic, creative copywriting, and structured analysis.
                 </p>
                 <div class="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-xl text-[11px] text-indigo-400 flex items-start gap-2.5">
                     <i class="fa-solid fa-circle-info mt-0.5"></i>
@@ -143,12 +155,12 @@
 
             <div class="flex gap-2 pt-2">
                 <button onclick="saveApiConfig()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm transition font-semibold">Save Key</button>
-                <button onclick="clearApiConfig()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 rounded-xl text-sm transition">Clear</button>
+                <button onclick="clearApiConfig()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 rounded-xl text-sm transition font-semibold">Clear</button>
             </div>
         </div>
     </div>
 
-    <!-- =================================== JAVASCRIPT LOGIC =================================== -->
+    <!-- =================================== JAVASCRIPT SYSTEM ENGINE =================================== -->
     <script>
         // --- Core Application State & Defaults ---
         let conversations = JSON.parse(localStorage.getItem('aura_ai_conversations')) || [];
@@ -156,9 +168,9 @@
         let geminiApiKey = localStorage.getItem('aura_ai_key') || null;
 
         const personas = {
-            helpful: "You are Aura, a standard, helpful, clean AI companion. Answer queries accurately and beautifully.",
-            code: "You are an elite software developer. Write clean, documented, secure scripts with optimal logic. Use Markdown formatting.",
-            creative: "You are an imaginative creative copywriter and strategist. Compose engaging drafts, hooks, and campaigns."
+            helpful: "You are Aura, an elite AI companion. Answer queries accurately and beautifully.",
+            code: "You are an expert software developer. Write clean, documented, secure scripts with optimal logic. Use Markdown formatting.",
+            creative: "You are a creative strategist. Compose engaging drafts, hooks, and campaigns."
         };
         let activePersona = 'helpful';
 
@@ -167,6 +179,14 @@
             initializeSystem();
             updateApiStatusBadge();
             document.getElementById('api-key-input').value = geminiApiKey || '';
+
+            // Enter Key submits, Shift+Enter new line
+            document.getElementById('user-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); 
+                    document.getElementById('chat-input-form').requestSubmit(); 
+                }
+            });
         };
 
         function initializeSystem() {
@@ -178,12 +198,10 @@
             }
         }
 
-        // Toggle visibility of target DOM modal ID
         function toggleModal(id) {
             document.getElementById(id).classList.toggle('hidden');
         }
 
-        // Correct off-canvas drawer transition handles
         function toggleMobileSidebar(shouldOpen) {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('mobile-sidebar-backdrop');
@@ -212,11 +230,17 @@
             if (geminiApiKey) {
                 badge.innerText = "ChatGPT Connected";
                 badge.className = "text-[9px] text-emerald-400 font-mono font-bold uppercase tracking-widest animate-pulse";
-                if (warningBanner) warningBanner.classList.add('hidden');
+                if (warningBanner) {
+                    warningBanner.innerText = "Cloud Gateway Active. Running live multi-turn model executions.";
+                    warningBanner.className = "text-center text-[10px] text-emerald-400 font-mono font-bold uppercase tracking-wider animate-pulse";
+                }
             } else {
-                badge.innerText = "Sandbox Mode";
-                badge.className = "text-[9px] text-amber-500 font-mono font-bold uppercase tracking-widest";
-                if (warningBanner) warningBanner.classList.remove('hidden');
+                badge.innerText = "Hybrid Online";
+                badge.className = "text-[9px] text-teal-400 font-mono font-black uppercase tracking-widest";
+                if (warningBanner) {
+                    warningBanner.innerText = "Online Crawler Active. Factual queries crawl global live databases automatically.";
+                    warningBanner.className = "text-center text-[10px] text-teal-400 font-mono font-bold uppercase tracking-wider";
+                }
             }
         }
 
@@ -228,7 +252,7 @@
                 return `
                     <div onclick="switchConversation('${c.id}')" class="group flex items-center justify-between p-3 rounded-xl transition duration-150 cursor-pointer ${isActive ? 'bg-slate-900 text-white font-extrabold border border-slate-850 shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-900/50'}">
                         <span class="flex items-center gap-2.5 text-xs truncate max-w-[80%]">
-                            <i class="fa-regular fa-comment text-xs ${isActive ? 'text-indigo-400' : 'text-slate-600'}"></i>
+                            <i class="fa-regular fa-comment text-xs ${isActive ? 'text-indigo-400 animate-bounce' : 'text-slate-600'}"></i>
                             <span class="truncate">${c.title}</span>
                         </span>
                         <button onclick="deleteConversation('${c.id}', event)" class="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition p-1 text-xs">
@@ -258,7 +282,7 @@
             saveStateToCache();
             renderSidebarList();
             loadConversationMessages();
-            toggleMobileSidebar(false); // Close Drawer
+            toggleMobileSidebar(false); 
         }
 
         function deleteConversation(id, event) {
@@ -285,22 +309,22 @@
 
             if (!chat || chat.messages.length === 0) {
                 container.innerHTML = `
-                    <div class="max-w-xl mx-auto text-center py-16 md:py-24 space-y-6">
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 text-2xl md:text-3xl mx-auto">
-                            <i class="fa-solid fa-sparkles animate-pulse"></i>
+                    <div class="max-w-xl mx-auto text-center py-16 md:py-24 space-y-6 animate-fade-in-up">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-450 text-2xl md:text-3xl mx-auto shadow-lg">
+                            <i class="fa-solid fa-globe animate-spin-slow text-teal-400"></i>
                         </div>
                         <div class="space-y-2 px-4">
                             <h2 class="text-lg md:text-xl font-bold text-white">How can I help you today?</h2>
-                            <p class="text-xs text-slate-400">Ask coding problems, plan itineraries, or structure complex equations.</p>
+                            <p class="text-xs text-slate-450 leading-relaxed">Ask anything. Aura crawls online search repositories dynamically to compile historical data, structures, and locations instantly.</p>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-6 max-w-md mx-auto text-left px-4">
-                            <button onclick="fillSuggestion('Explain dynamic programming and recursion with a visual analogy.')" class="bg-slate-950/80 border border-slate-850 hover:border-slate-700 p-4 rounded-xl text-xs space-y-1 transition active:scale-95">
-                                <p class="font-bold text-white">Understand Recursion</p>
-                                <p class="text-slate-500">Deconstructs hard CS paradigms.</p>
+                            <button onclick="fillSuggestion('Who is Alan Turing and what was his contribution to computer science?')" class="bg-slate-950/80 border border-slate-850 hover:border-teal-500/40 p-4 rounded-xl text-xs space-y-1 transition active:scale-95">
+                                <p class="font-bold text-white"><i class="fa-solid fa-magnifying-glass text-teal-400 mr-1.5"></i> Search Wikipedia</p>
+                                <p class="text-slate-500 leading-relaxed">Crawl factual parameters online.</p>
                             </button>
-                            <button onclick="fillSuggestion('Draft a professional response asking to reschedule a sprint planning meeting.')" class="bg-slate-950/80 border border-slate-850 hover:border-slate-700 p-4 rounded-xl text-xs space-y-1 transition active:scale-95">
-                                <p class="font-bold text-white">Draft Email</p>
-                                <p class="text-slate-500">Professional tone adjustments.</p>
+                            <button onclick="fillSuggestion('Write a secure Node.js middleware verifying JWT credentials.')" class="bg-slate-950/80 border border-slate-850 hover:border-indigo-500/40 p-4 rounded-xl text-xs space-y-1 transition active:scale-95">
+                                <p class="font-bold text-white"><i class="fa-solid fa-code text-indigo-400 mr-1.5"></i> Generate Scripts</p>
+                                <p class="text-slate-500 leading-relaxed">Compile optimal syntax algorithms.</p>
                             </button>
                         </div>
                     </div>
@@ -321,7 +345,7 @@
                         ${!isUser ? avatar : ''}
                         <div class="space-y-1 max-w-[85%] md:max-w-[75%]">
                             <div class="text-[9px] text-slate-500 font-mono font-bold uppercase tracking-wider">${isUser ? 'You' : 'Aura AI'}</div>
-                            <div class="px-4 py-3 md:px-5 md:py-3.5 rounded-2xl text-xs md:text-sm leading-relaxed ${isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-950 border border-slate-855 text-slate-200 rounded-tl-none shadow-lg'}">
+                            <div class="px-4 py-3 md:px-5 md:py-3.5 rounded-2xl text-xs md:text-sm leading-relaxed ${isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-900 border border-slate-855 text-slate-200 rounded-tl-none shadow-lg'}">
                                 ${parsedHTML}
                             </div>
                         </div>
@@ -336,7 +360,7 @@
         function fillSuggestion(text) {
             document.getElementById('user-input').value = text;
             handleMessageSubmission(new Event('submit'));
-        }
+        }        
 
         // --- Parser Engine (Markdown Elements) ---
         function parseMarkdown(text) {
